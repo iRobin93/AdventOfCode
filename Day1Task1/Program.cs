@@ -88,6 +88,8 @@ int GetNumber(int a, int[] liste2)
     {
         if (a == liste2[i])
             count++;
+        if (liste2[i] > a)
+            return count;
     }
 
     return count;
