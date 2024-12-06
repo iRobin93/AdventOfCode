@@ -1,8 +1,12 @@
 ﻿int total = 0;
-void ReadFile(string filepath)
+bool lastLineDo = true;
+bool lastDont = false;
+
+void ReadFile(string filepath, bool exludeDonts)
 {
     string line;
-
+    string newNextLine = "";
+    lastLineDo = true;
     try
     {
         //Pass the file path and file name to the StreamReader constructor
@@ -15,9 +19,22 @@ void ReadFile(string filepath)
             //write the line to console window
 
             string nextline = line;
-
+            newNextLine = nextline;
+            lastDont = false;
+            if (exludeDonts)
+                do
+                {
+                    nextline = newNextLine;
+                    newNextLine = RemoveTextAfterDont(nextline);
+                }while (nextline != newNextLine);
+                    
             while (nextline != null)
-                nextline = GetMulls(nextline);
+            {
+                nextline = GetMulls(nextline);         
+            }
+
+
+                
             
             //Read the next line
             line = sr.ReadLine();
@@ -35,6 +52,58 @@ void ReadFile(string filepath)
     {
         Console.WriteLine("Executing finally block.");
     }
+}
+
+
+string RemoveTextAfterDont(string line)
+{
+    int firstdont = -1;
+    int firstdo = -1;
+    string lineBeforeDont = "";
+    string afterDont = "";
+    string lineAfterDo = "";
+    string returnString = "";
+    if (lastLineDo)
+    {
+        firstdont = line.IndexOf("don't()") + "don't()".Length;
+        if (firstdont == 6)
+            return line;
+        lastLineDo = false;
+        lineBeforeDont = line.Substring(0, firstdont - "don't()".Length);
+        afterDont = line.Substring(firstdont, line.Length - firstdont);
+        firstdo = afterDont.IndexOf("do()") + "do()".Length;
+        if (firstdo == 3)
+        {
+            lastDont = true;
+            return lineBeforeDont;
+        }
+            
+        lastLineDo = true;
+        lineAfterDo = afterDont.Substring(firstdo, afterDont.Length - firstdo);
+        returnString = lineBeforeDont + lineAfterDo;
+    }
+    
+   else
+    {
+        if (lastDont)
+            return line;
+        firstdo = line.IndexOf("do()") + "do()".Length;
+        if (firstdo == 3)
+            return "";
+        lastLineDo = true;
+        lineAfterDo = line.Substring(firstdo, line.Length - firstdo);
+        returnString = lineAfterDo;
+    }
+
+
+
+    //25122114
+    //50175920
+    //70478672
+
+
+
+    return returnString;
 }
 
 string GetMulls(string line)
@@ -62,4 +131,6 @@ string GetMulls(string line)
     return subline;
 }
 
-ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day3\\String.txt");
+ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day3\\String.txt", false);
+total = 0;
+ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day3\\String.txt", true);
