@@ -7,11 +7,14 @@
  * 
  * 
  * 
+ * Part 2: 
+ * 1. For alle linjer som feiler: for hvert tall i pageNumbers flytt første tall som skal være foran i henhold til regel foran i newPageNumbers.
  * 
  */
 
 List<KeyValuePair<int, int>> rulePairs = new List<KeyValuePair<int, int>>();
 int total = 0;
+int total2 = 0;
 void ReadFileRules(string filepath)
 {
     string line;
@@ -70,12 +73,22 @@ void ReadFileUpdates(string filepath)
                     if (pageNumbers[i] == rulePair.Key)
                     {
                         if (!CheckIfKeyValid(pageNumbers, rulePair.Value, i))
+                        {
+                            
+                               total2 += MakeValid(pageNumbers);
                             goto End;
+                        }
+                            
                     }
                     else if (pageNumbers[i] == rulePair.Value)
                     {
                         if (!CheckIfValueIsValid(pageNumbers, rulePair.Key, i))
+                        {
+                            
+                                total2 += MakeValid(pageNumbers);
                             goto End;
+                        }
+                            
                     }
 
                 }
@@ -89,7 +102,8 @@ End:
         }
         //close the file
         sr.Close();
-        Console.WriteLine(total);
+        Console.WriteLine("Total part 1: " + total);
+        Console.WriteLine("Total part 2: " + total2);
         Console.ReadLine();
     }
     catch (Exception e)
@@ -100,6 +114,27 @@ End:
     {
         Console.WriteLine("Executing finally block.");
     }
+}
+
+int MakeValid(int[] pageNumbers)
+{
+    var nullvariabel = new KeyValuePair<int, int>(0, 0);
+    for (int i = 0; i < pageNumbers.Length; i++)
+    {
+        for (int j = i + 1; j < pageNumbers.Length; j++)
+        {
+            if (!(rulePairs.Find(rulePair => rulePair.Key == pageNumbers[j] && rulePair.Value == pageNumbers[i])).Equals(nullvariabel))
+            {
+                int tempVar = pageNumbers[i];
+                pageNumbers[i] = pageNumbers[j];
+                pageNumbers[j] = tempVar;
+                i--;
+                break;
+            }
+        }
+            
+    }
+    return pageNumbers[(int)Math.Ceiling(((decimal)pageNumbers.Length / 2) - 1)];
 }
 
 bool CheckIfValueIsValid(int[] pageNumbers, int key, int index)
@@ -123,6 +158,8 @@ bool CheckIfKeyValid(int[] pageNumbers, int value, int index)
             { return false; }
     return true;
 }
+
+
 
 ReadFileRules("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day5\\Rules.txt");
 ReadFileUpdates("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day5\\Updates.txt");
