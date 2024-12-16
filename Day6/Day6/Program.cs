@@ -10,6 +10,7 @@
 
 
 using System.Security;
+using System.Security.AccessControl;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -20,7 +21,7 @@ void ReadFile(string filepath)
     int total = 0;
     string line;
     int i = 0;
-    string[] rowsArray = new string[10];
+    string[] rowsArray = new string[130];
     int[] currentPos = new int[2];
     try
     {
@@ -91,7 +92,17 @@ void Walk(string[] rowsArray, int[] currentPos)
 }
 void WalkNorth(string[] rowsArray, int[] currentPos)
 {
-   
+    if (currentPos[0] > 0)
+    {
+        var nextNorthChar = rowsArray[currentPos[0] - 1][currentPos[1]];
+        if (nextNorthChar == '#')
+        {
+            direction = "east";
+            return;
+        }
+    }
+
+
     StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
     stringCopy[currentPos[1]] = 'X';
     rowsArray[currentPos[0]] = stringCopy.ToString();
@@ -104,17 +115,82 @@ void WalkNorth(string[] rowsArray, int[] currentPos)
 
 void WalkEast(string[] rowsArray, int[] currentPos) 
 {
+    if (currentPos[1] < rowsArray[currentPos[0]].Length - 1)
+    {
+        var nextEastChar = rowsArray[currentPos[0]][currentPos[1] + 1];
+        if (nextEastChar == '#')
+        {
+            direction = "south";
+            return;
+        }
+    }
+    
 
+
+    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
+    stringCopy[currentPos[1]] = 'X';
+    rowsArray[currentPos[0]] = stringCopy.ToString();
+
+    currentPos[1] = currentPos[1] + 1;
+    if (currentPos[1] > rowsArray[currentPos[0]].Length - 1)
+    {
+        currentPos[0] = -1;
+        currentPos[1] = -1;
+    }
+        
 }
 
 void WalkSouth(string[] rowsArray, int[] currentPos)
 {
+    if (currentPos[0] < rowsArray.Length - 1)
+    {
+        var nextSouthChar = rowsArray[currentPos[0]+1][currentPos[1]];
+        if (nextSouthChar == '#')
+        {
+            direction = "west";
+            return;
+        }
+    }
+
+
+
+    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
+    stringCopy[currentPos[1]] = 'X';
+    rowsArray[currentPos[0]] = stringCopy.ToString();
+
+    currentPos[0] = currentPos[0] + 1;
+    if (currentPos[0] > rowsArray.Length - 1)
+    {
+        currentPos[0] = -1;
+        currentPos[1] = -1;
+    }
 
 }
 
+//..
+//..
+
 void WalkWest(string[] rowsArray, int[] currentPos)
 {
+    if (currentPos[1] > 0)
+    {
+        var nextWestChar = rowsArray[currentPos[0]][currentPos[1] - 1];
+        if (nextWestChar == '#')
+        {
+            direction = "north";
+            return;
+        }
+    }
 
+
+
+    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
+    stringCopy[currentPos[1]] = 'X';
+    rowsArray[currentPos[0]] = stringCopy.ToString();
+
+    currentPos[1] = currentPos[1] - 1;
+    if (currentPos[1] == -1)
+        currentPos[0] = -1;
 }
 
 int CountXes(string[] rowsArray)
