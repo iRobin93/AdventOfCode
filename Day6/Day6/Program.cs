@@ -6,6 +6,12 @@
  * 4. når man treffer havner utenfor mapet er spillet slutt.
  * 5. tell opp antall x'er
  * 
+ * 
+ * 
+ * Del 2:
+ *  For hvert felt vakten kommer til, sett en 0
+ *  sjekk om det er en evig loop, måten vi sjekker er om han møter 0'en en gang til med samme direction
+ *  hvis ikke går vi til han går ut av spillet.
  */
 
 
@@ -15,14 +21,18 @@ using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 string direction = "north";
+int ZeroHit = 0;
+int infinityLoops = 0;
 
-void ReadFile(string filepath)
+void ReadFile(string filepath, bool part2)
 {
     int total = 0;
     string line;
     int i = 0;
-    string[] rowsArray = new string[130];
+    List<string> rowsList = new List<string>();
     int[] currentPos = new int[2];
+    int[] lastZeroPos = new int[2];
+    string lastZeroDirection = "north";
     try
     {
         //Pass the file path and file name to the StreamReader constructor
@@ -32,10 +42,10 @@ void ReadFile(string filepath)
         //Continue to read until you reach end of file
         while (line != null)
         {
-            
+
             //write the line to console window
             //Read line, and split it by whitespace into an array of strings
-            rowsArray[i++] = line;
+            rowsList.Add(line);
 
 
             //Read the next line
@@ -44,11 +54,25 @@ void ReadFile(string filepath)
         }
         //close the file
         sr.Close();
-        FindStart(rowsArray, currentPos);
+        FindStart(rowsList, currentPos);
+        lastZeroPos[0] = currentPos[0];
+        lastZeroPos[1] = currentPos[1];
+        AddZero(rowsList, lastZeroPos, lastZeroDirection);
         while (currentPos[0] != -1)
-            Walk(rowsArray, currentPos);
-        total = CountXes(rowsArray);
-        Console.WriteLine(total);
+        {
+            Walk(rowsList, currentPos);
+            if (ZeroHit == 2)
+            {
+                ZeroHit = 0;
+                infinityLoops++;
+                break;
+            }
+                
+        }
+            
+        total = CountXes(rowsList);
+        Console.WriteLine("Total i part 1 er: " + total);
+        Console.WriteLine("Infinity loops er: " + infinityLoops);
         Console.ReadLine();
     }
     catch (Exception e)
@@ -61,13 +85,37 @@ void ReadFile(string filepath)
     }
 }
 
-void FindStart(string[] rowsArray, int[] currentPos)
+void AddZero(List<string> rowsList, int[] lastZeroPos, string lastZeroDirection)
 {
-    for (int i = 0; i < rowsArray.Length; i++)
+    switch (lastZeroDirection) 
     {
-        for (int j = 0; j < rowsArray[i].Length; j++)
+        
+        case "north":
+            lastZeroPos[0]--;
+            AddCharacter(rowsList, lastZeroPos, '0'); 
+            break;
+        case "east":
+            lastZeroPos[1]++;
+            AddCharacter(rowsList, lastZeroPos, '0');
+            break;
+        case "south":
+            lastZeroPos[0]++;
+            AddCharacter(rowsList, lastZeroPos, '0');
+            break;
+        case "west":
+            lastZeroPos[1]--;
+            AddCharacter(rowsList, lastZeroPos, '0');
+            break;
+    }
+}
+
+void FindStart(List<string> rowsList, int[] currentPos)
+{
+    for (int i = 0; i < rowsList.Count; i++)
+    {
+        for (int j = 0; j < rowsList[i].Length; j++)
         {
-            if (rowsArray[i][j] == '^')
+            if (rowsList[i][j] == '^')
             {
                 currentPos[0] = i;
                 currentPos[1] = j;
@@ -79,60 +127,65 @@ void FindStart(string[] rowsArray, int[] currentPos)
     }
 }
 
-void Walk(string[] rowsArray, int[] currentPos)
+void Walk(List<string> rowsList, int[] currentPos)
 {
     if (direction == "north")
-        WalkNorth(rowsArray, currentPos);
+        WalkNorth(rowsList, currentPos);
     else if (direction == "east")
-        WalkEast(rowsArray, currentPos);
+        WalkEast(rowsList, currentPos);
     else if (direction == "south")
-        WalkSouth(rowsArray, currentPos);
+        WalkSouth(rowsList, currentPos);
     else 
-        WalkWest(rowsArray, currentPos);
+        WalkWest(rowsList, currentPos);
 }
-void WalkNorth(string[] rowsArray, int[] currentPos)
+void WalkNorth(List<string> rowsList, int[] currentPos)
 {
     if (currentPos[0] > 0)
     {
-        var nextNorthChar = rowsArray[currentPos[0] - 1][currentPos[1]];
-        if (nextNorthChar == '#')
+        var nextNorthChar = rowsList[currentPos[0] - 1][currentPos[1]];
+        if (nextNorthChar == '#' || nextNorthChar == '0')
         {
+            if (nextNorthChar == '0')
+            {
+                ZeroHit++;
+                
+            }
             direction = "east";
             return;
         }
     }
 
 
-    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
-    stringCopy[currentPos[1]] = 'X';
-    rowsArray[currentPos[0]] = stringCopy.ToString();
-    
+    AddCharacter(rowsList, currentPos, 'X');
+
     currentPos[0] = currentPos[0] - 1;
     if (currentPos[0] == -1)
         currentPos[1] = -1;
 
 }
 
-void WalkEast(string[] rowsArray, int[] currentPos) 
+void WalkEast(List<string> rowsList, int[] currentPos) 
 {
-    if (currentPos[1] < rowsArray[currentPos[0]].Length - 1)
+    if (currentPos[1] < rowsList[currentPos[0]].Length - 1)
     {
-        var nextEastChar = rowsArray[currentPos[0]][currentPos[1] + 1];
-        if (nextEastChar == '#')
+        var nextEastChar = rowsList[currentPos[0]][currentPos[1] + 1];
+        if (nextEastChar == '#' || nextEastChar == '0')
         {
+            if (nextEastChar == '0')
+            {
+                ZeroHit++;
+            }
             direction = "south";
             return;
         }
     }
-    
 
 
-    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
-    stringCopy[currentPos[1]] = 'X';
-    rowsArray[currentPos[0]] = stringCopy.ToString();
+
+    AddCharacter(rowsList, currentPos, 'X');
 
     currentPos[1] = currentPos[1] + 1;
-    if (currentPos[1] > rowsArray[currentPos[0]].Length - 1)
+    if (currentPos[1] > rowsList[currentPos[0]].Length - 1)
     {
         currentPos[0] = -1;
         currentPos[1] = -1;
@@ -140,26 +193,26 @@ void WalkEast(string[] rowsArray, int[] currentPos)
         
 }
 
-void WalkSouth(string[] rowsArray, int[] currentPos)
+void WalkSouth(List<string> rowsList, int[] currentPos)
 {
-    if (currentPos[0] < rowsArray.Length - 1)
+    if (currentPos[0] < rowsList.Count - 1)
     {
-        var nextSouthChar = rowsArray[currentPos[0]+1][currentPos[1]];
-        if (nextSouthChar == '#')
+        var nextSouthChar = rowsList[currentPos[0] + 1][currentPos[1]];
+        if (nextSouthChar == '#' || nextSouthChar == '0')
         {
+            if (nextSouthChar == '0')
+            {
+                ZeroHit++;
+            }
             direction = "west";
             return;
         }
     }
 
-
-
-    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
-    stringCopy[currentPos[1]] = 'X';
-    rowsArray[currentPos[0]] = stringCopy.ToString();
+    AddCharacter(rowsList, currentPos, 'X');
 
     currentPos[0] = currentPos[0] + 1;
-    if (currentPos[0] > rowsArray.Length - 1)
+    if (currentPos[0] > rowsList.Count - 1)
     {
         currentPos[0] = -1;
         currentPos[1] = -1;
@@ -170,13 +223,17 @@ void WalkSouth(string[] rowsArray, int[] currentPos)
 //..
 //..
 
-void WalkWest(string[] rowsArray, int[] currentPos)
+void WalkWest(List<string> rowsList, int[] currentPos)
 {
     if (currentPos[1] > 0)
     {
-        var nextWestChar = rowsArray[currentPos[0]][currentPos[1] - 1];
-        if (nextWestChar == '#')
+        var nextWestChar = rowsList[currentPos[0]][currentPos[1] - 1];
+        if (nextWestChar == '#' || nextWestChar == '0')
         {
+            if (nextWestChar == '0')
+            {
+                ZeroHit++;
+            }
             direction = "north";
             return;
         }
@@ -184,24 +241,30 @@ void WalkWest(string[] rowsArray, int[] currentPos)
 
 
 
-    StringBuilder stringCopy = new StringBuilder(rowsArray[currentPos[0]]);
-    stringCopy[currentPos[1]] = 'X';
-    rowsArray[currentPos[0]] = stringCopy.ToString();
+    AddCharacter(rowsList, currentPos, 'X');
 
     currentPos[1] = currentPos[1] - 1;
     if (currentPos[1] == -1)
         currentPos[0] = -1;
 }
 
-int CountXes(string[] rowsArray)
+int CountXes(List<string> rowsList)
 {
     int count = 0;
-    for (int i = 0; i < rowsArray.Length; i++)
-        for (int j = 0; j < rowsArray[i].Length; j++)
-            if (rowsArray[i][j] == 'X')
+    for (int i = 0; i < rowsList.Count; i++)
+        for (int j = 0; j < rowsList[i].Length; j++)
+            if (rowsList[i][j] == 'X')
                 count++;
     return count;
 }
 
 
-ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day6\\Day6\\path.txt");
+ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day6\\Day6\\path.txt", false);
+ReadFile("C:\\Users\\robin\\source\\repos\\AdventOfCode\\Day6\\Day6\\path.txt", true);
+
+static void AddCharacter(List<string> rowsList, int[] currentPos, char characterToAdd)
+{
+    StringBuilder stringCopy = new StringBuilder(rowsList[currentPos[0]]);
+    stringCopy[currentPos[1]] = characterToAdd;
+    rowsList[currentPos[0]] = stringCopy.ToString();
+}
